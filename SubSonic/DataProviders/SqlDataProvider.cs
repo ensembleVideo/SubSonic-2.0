@@ -1181,9 +1181,8 @@ ORDER BY OrdinalPosition ASC";
         {
             if(Utility.IsSql2005(this))
                 return new Sql2005Generator(sqlQuery);
-            if(Utility.IsSql2008(this))
-                return new Sql2008Generator(sqlQuery);
-            return new Sql2000Generator(sqlQuery);
+            
+            return new Sql2008Generator(sqlQuery);
         }
 
         #endregion

@@ -292,10 +292,8 @@ namespace SubSonic
                 case DataProviderTypeName.SQL_SERVER:
                     if(Utility.IsSql2005(provider))
                         generator = new Sql2005Generator(sqlQuery);
-                    else if(Utility.IsSql2008(provider))
+                    else 
                         generator = new Sql2008Generator(sqlQuery);
-                    else
-                        generator = new Sql2000Generator(sqlQuery);
                     break;
                 case DataProviderTypeName.MY_SQL:
                     generator = new MySqlGenerator(sqlQuery);
