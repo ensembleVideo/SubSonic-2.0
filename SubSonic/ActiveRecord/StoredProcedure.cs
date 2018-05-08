@@ -15,6 +15,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using SubSonic.Utilities;
 
@@ -308,6 +310,7 @@ namespace SubSonic
             return converted;
         }
 
+
         /// <summary>
         /// Executes the typed list.
         /// </summary>
@@ -316,12 +319,55 @@ namespace SubSonic
         public List<T> ExecuteTypedList<T>() where T : new()
         {
             List<T> result;
-            using(IDataReader rdr = DataService.GetReader(Command))
+            using (IDataReader rdr = DataService.GetReader(Command))
             {
                 result = SqlQuery.BuildTypedResult<T>(rdr);
                 rdr.Close();
             }
 
+            return result;
+        }
+
+        /// <summary>
+        /// Executes the typed list.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public List<T> ExecuteTypedList<T>(bool hasOutputParameters) where T : new()
+        {
+            List<T> result;
+            if (hasOutputParameters)
+            {
+                SqlCommand cmd;
+                using (var rdr = DataService.GetInstance(Command.ProviderName).GetReader(Command, out cmd))
+                {
+                    result = SqlQuery.BuildTypedResult<T>(rdr);
+                    rdr.Close();
+
+                    if (Command.HasOutputParams())
+                    {
+                        //loop the params, getting the values and setting them for the return
+                        foreach (QueryParameter param in Command.Parameters)
+                        {
+                            if (param.Mode == ParameterDirection.InputOutput || param.Mode == ParameterDirection.Output || param.Mode == ParameterDirection.ReturnValue)
+                            {
+                                object oVal = cmd.Parameters[param.ParameterName].Value;
+                                param.ParameterValue = oVal;
+                                Command.OutputValues.Add(oVal);
+                            }
+                        }
+                    }
+                }
+                OutputValues = Command.OutputValues;
+            }
+            else
+            {
+                using (IDataReader rdr = DataService.GetReader(Command))
+                {
+                    result = SqlQuery.BuildTypedResult<T>(rdr);
+                    rdr.Close();
+                }
+            }
             return result;
         }
 

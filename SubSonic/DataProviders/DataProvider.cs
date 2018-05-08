@@ -19,6 +19,7 @@ using System.Collections.Specialized;
 using System.Configuration.Provider;
 using System.Data;
 using System.Data.Common;
+using System.Data.SqlClient;
 using System.Text;
 using System.Web.Configuration;
 using SubSonic.Utilities;
@@ -725,12 +726,25 @@ namespace SubSonic
         public abstract IDataReader GetReader(QueryCommand cmd);
 
         /// <summary>
+        /// Gets the reader.
+        /// </summary>
+        /// <param name="qry">The CMD.</param>
+        /// <param name="cmd"></param>
+        /// <returns></returns>
+        public virtual IDataReader GetReader(QueryCommand qry, out SqlCommand cmd)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        /// <summary>
         /// Gets the single record reader.
         /// </summary>
         /// <param name="cmd">The CMD.</param>
         /// <returns></returns>
         public abstract IDataReader GetSingleRecordReader(QueryCommand cmd);
 
+       
         /// <summary>
         /// Gets the data set.
         /// </summary>

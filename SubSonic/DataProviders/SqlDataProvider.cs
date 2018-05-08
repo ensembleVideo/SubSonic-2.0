@@ -273,7 +273,7 @@ ORDER BY OrdinalPosition ASC";
         /// </summary>
         /// <param name="cmd">The CMD.</param>
         /// <param name="qry">The qry.</param>
-        private static void CheckoutOutputParams(SqlCommand cmd, QueryCommand qry)
+        public static void CheckoutOutputParams(SqlCommand cmd, QueryCommand qry)
         {
             if(qry.CommandType == CommandType.StoredProcedure && qry.HasOutputParams())
             {
@@ -382,6 +382,44 @@ ORDER BY OrdinalPosition ASC";
                 throw;
             }
             CheckoutOutputParams(cmd, qry);
+
+            return rdr;
+        }
+
+
+        /// <summary>
+        /// Gets the reader.
+        /// </summary>
+        /// <param name="qry">The Query Command.</param>
+        /// <param name="cmd">Has Sql Command</param>
+        /// <returns></returns>
+        public override IDataReader GetReader(QueryCommand qry, out SqlCommand cmd)
+        {
+            AutomaticConnectionScope automaticConnectionScope = new AutomaticConnectionScope(this);
+            cmd = new SqlCommand(qry.CommandSql)
+            {
+                CommandType = qry.CommandType,
+                CommandTimeout = qry.CommandTimeout
+            };
+            AddParams(cmd, qry);
+
+            cmd.Connection = (SqlConnection)automaticConnectionScope.Connection;
+            //let this bubble up
+            IDataReader rdr;
+
+            //Thanks jcoenen!
+            try
+            {
+                // if it is a shared connection, we shouldn't be telling the reader to close it when it is done
+                rdr = automaticConnectionScope.IsUsingSharedConnection ? cmd.ExecuteReader() : cmd.ExecuteReader(CommandBehavior.CloseConnection);
+            }
+            catch (SqlException)
+            {
+                // AutoConnectionScope will figure out what to do with the connection
+                automaticConnectionScope.Dispose();
+                //rethrow retaining stack trace.
+                throw;
+            }
 
             return rdr;
         }
